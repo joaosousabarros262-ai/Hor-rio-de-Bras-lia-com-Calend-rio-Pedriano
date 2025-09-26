@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Clock with Pedrian Calendar</title>
+<link href="https://fonts.googleapis.com/css2?family=YouTube+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: YouTube Sans, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background:#f0f0f0;
+    margin:0;
+  }
+  .calendar {
+    text-align:center;
+    background:#fff;;
+    padding:70px;
+    border-radius:15px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.1);
+    max-width:550px;
+    border: 0.1px solid #333;
+  }
+  .title {
+    font-size:2em;
+    margin-bottom:10px;
+    color:#0077ff;
+  }
+  .clock {
+    font-size: 3em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #000;
+    
+  }
+  .clock span {
+    display: inline-block;
+    width: 0.944ch; /* largura fixa para cada dígito */
+    text-align: center;
+  }
+  .colon {
+    width: 0.8ch; /* colon um pouco menor */
+    animation: blink 2s step-start infinite;
+  }
+  @keyframes blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0; }
+  }
+  .custom-calendar {
+    font-size:1.2em;
+    font-weight:bold;
+    color:#000;
+    margin-bottom:15px;
+    opacity: 0.7;
+  }
+  .info-text {
+    font-size:0.9em;
+    color:#000;
+    opacity: 0.4;
+  }
+  .info-text small {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.75em;
+    color: #fff;
+  }
+  .copyright {
+    color: #fff;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="calendar">
+  <div class="title">HORÁRIO ATUAL:</div>
+  <div class="clock" id="clock">--:--:--</div>
+  <div class="custom-calendar" id="customCalendar"></div>
+  <div class="info-text">Computer time. Time zone: UTC-03:00🇧🇷<br>Calendar system: Pedrian</br></div>
+    <small id="copyright"></small>
+  </div>
+</div>
+
+<script>
+const calendarConfig = {
+  start: new Date("2023-12-16T18:00:00-03:00"),
+  months: [
+    { name: "Adrump", days: 4 },
+    { name: "Catuji", days: 2 },
+    { name: "Waryui", days: 4 },
+    { name: "Carumk", days: 3 },
+    { name: "Dafer", days: 4 },
+    { name: "Farertyi", days: 2 },
+  ],
+  weekdays: ["Adedty", "Lathuj", "Sartunik"]
+};
+
+// Atualiza o relógio
+function updateClock() {
+  const now = new Date();
+  const cal = calcularCalendario19Dias(now);
+
+  let h = String(cal.hours).padStart(2,'0');
+  let m = String(cal.minutes).padStart(2,'0');
+  let s = String(cal.seconds).padStart(2,'0');
+
+  // Cada dígito dentro de um <span> fixo
+  document.getElementById("clock").innerHTML =
+    `<span>${h[0]}</span><span>${h[1]}</span><span class="colon">:</span>` +
+    `<span>${m[0]}</span><span>${m[1]}</span><span class="colon">:</span>` +
+    `<span>${s[0]}</span><span>${s[1]}</span>`;
+
+  document.getElementById("customCalendar").textContent =
+    `${cal.weekday}, ${cal.dayInMonth} de ${cal.month} de ${cal.year}`;
+}
+
+// Calendário Pedrian
+function calcularCalendario19Dias(now) {
+  let diffMs = now - calendarConfig.start;
+  const msPerDay = 24*60*60*1000;
+  const totalDays = Math.floor(diffMs / msPerDay);
+
+  const daysPerYear = calendarConfig.months.reduce((sum, m) => sum + m.days, 0);
+  const year = Math.floor(totalDays / daysPerYear) + 1;
+  let dayOfYear = (totalDays % daysPerYear) + 1;
+
+  let monthIndex = 0;
+  let dayInMonth = dayOfYear;
+  for (let m of calendarConfig.months) {
+    if (dayInMonth <= m.days) break;
+    dayInMonth -= m.days;
+    monthIndex++;
+  }
+
+  let weekdayIndex = totalDays % calendarConfig.weekdays.length;
+  const weekdayName = calendarConfig.weekdays[weekdayIndex];
+
+  const msIntoDay = diffMs % msPerDay;
+  let hours = Math.floor(msIntoDay / (1000*60*60));
+  let minutes = Math.floor((msIntoDay % (1000*60*60)) / (1000*60));
+  let seconds = Math.floor((msIntoDay % (1000*60)) / 1000);
+
+  return { year, month: calendarConfig.months[monthIndex].name, dayInMonth, weekday: weekdayName, hours, minutes, seconds };
+}
+
+// Copyright ano atual
+const year = new Date().getFullYear();
+document.getElementById('copyright').textContent = `© ${year} Pedro Barros. All Rights Reserved™`;
+
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
